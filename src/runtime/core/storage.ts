@@ -15,7 +15,10 @@ export class Storage {
 
     constructor(ctx: NuxtApp, options: ModuleOptions) {
         this.ctx = ctx;
-        this.options = options;
+        this.options = {
+            ...options,
+            ...(this.ctx.$config && this.ctx.$config.auth)
+        };
         this.#piniaEnabled = false;
 
         this.#initState();
@@ -273,13 +276,13 @@ export class Storage {
         if (isUnset(value)) {
             return this.removeSessionStorage(key)
         }
-    
+
         if (!this.isSessionStorageEnabled()) {
             return
         }
-    
+
         const $key = this.getSessionStoragePrefix() + key
-    
+
         try {
             sessionStorage.setItem($key, encodeValue(value))
         } catch (e) {
@@ -287,8 +290,8 @@ export class Storage {
                 throw e
             }
         }
-    
-        return value  
+
+        return value
     }
 
     getSessionStorage(key: string): any {
@@ -393,7 +396,7 @@ export class Storage {
         if (process.client) {
             // Set in browser
             document.cookie = serializedCookie;
-        } 
+        }
         else if (process.server && this.ctx.ssrContext!.event.node.res) {
             // Send Set-Cookie header from server side
             let cookies = (this.ctx.ssrContext!.event.node.res.getHeader('Set-Cookie') as string[]) || [];
@@ -401,8 +404,8 @@ export class Storage {
             cookies.unshift(serializedCookie);
 
             this.ctx.ssrContext!.event.node.res.setHeader('Set-Cookie', cookies.filter(
-                (v, i, arr) => arr.findIndex( 
-                    (val) => val.startsWith(v.slice(0, v.indexOf('='))) 
+                (v, i, arr) => arr.findIndex(
+                    (val) => val.startsWith(v.slice(0, v.indexOf('=')))
                 ) === i
             ));
         }
